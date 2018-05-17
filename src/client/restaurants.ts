@@ -11,7 +11,6 @@ const sortByDistance = ({ distance: distance1 = 0 }: Restaurant, { distance: dis
 
 export const restaurants: Restaurant[] = [
     { name: 'Lights of India', id: 16511911, distance: 400 },
-    { name: 'Magistr', id: 16506840, distance: 170 },
     { name: 'U Dřeváka', id: 16505458, distance: 300 },
     { name: 'Al Capone', id: 16515833, distnace: 300 },
     { name: 'Divá Bára', id: 16514047, distance: 450 },
