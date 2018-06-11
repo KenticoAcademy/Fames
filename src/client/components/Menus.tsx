@@ -13,6 +13,7 @@ export const Menus: React.StatelessComponent<{}> = () => (
             key={restaurant.id}
             restaurantName={restaurant.name}
             restaurantId={restaurant.id}
+            restaurantDistance={restaurant.distance}
           />
         ))
       }

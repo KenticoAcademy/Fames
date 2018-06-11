@@ -7,6 +7,7 @@ import DishListItem from './DishListItem';
 interface MenuProperties {
     restaurantName: string;
     restaurantId: number;
+    restaurantDistance: number;
 }
 
 class MenuState {
@@ -24,6 +25,19 @@ export class Menu extends React.Component<MenuProperties, MenuState> {
             message: 'Loading…'
         };
     }
+
+    _getCorrectFormOfMinutes = (minutes: number) => {
+      switch(minutes) {
+          case 1:
+              return 'minuta';
+          case 2:
+          case 3:
+          case 4:
+              return 'minuty';
+          default:
+              return 'minut';
+      }
+    };
 
     componentDidMount() {
         Axios
@@ -47,11 +61,13 @@ export class Menu extends React.Component<MenuProperties, MenuState> {
     }
     
     render() {
+        const minutesForm = this._getCorrectFormOfMinutes(this.props.restaurantDistance);
+        const restaurantTitle = this.props.restaurantName + ` (${this.props.restaurantDistance + ' ' +  minutesForm} chůze)`;
         // Display status message when results were not loaded or no dishes were returned.
         if (!this.state.isLoaded || this.state.dishes == null) {
             return (
                 <div>
-                    <h2>{this.props.restaurantName}</h2>
+                    <h2>{restaurantTitle}</h2>
                     <p>{this.state.message}</p>
                 </div>);
         }
@@ -60,7 +76,7 @@ export class Menu extends React.Component<MenuProperties, MenuState> {
             return (
                 <div>
                     <h2>
-                        {this.props.restaurantName}
+                        {restaurantTitle}
                         <sup><small><a href={'http://zoma.to/r/' + this.props.restaurantId}><span className='glyphicon glyphicon-paperclip'></span></a></small></sup>
                     </h2>
                     <ul>
