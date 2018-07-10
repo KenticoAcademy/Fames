@@ -1,40 +1,76 @@
-// distance in minutes from Kentico Academy (CERIT)
+import LatLng = google.maps.LatLng;
+import TravelMode = google.maps.TravelMode;
+import DistanceMatrixResponse = google.maps.DistanceMatrixResponse;
+import DistanceMatrixStatus = google.maps.DistanceMatrixStatus;
 
-import {ILocationCoordinates} from "./utils/getCurrentLocation";
-import * as geolib from 'geolib';
-
-type Restaurant = {
-    name: string;
+export type Restaurant = {
+    address: string;
     id: number;
+    duration?: string;
     distance?: number;
-    coords?: ILocationCoordinates;
 };
 
-const sortByDistance = ({ distance: distance1 = 0 }: Restaurant, { distance: distance2 = 0 }: Restaurant) =>
+const sortByDistance = ({distance: distance1 = 0}: Restaurant, {distance: distance2 = 0}: Restaurant): number =>
     distance1 - distance2;
 
-const restaurants: Restaurant[] = [
-    {name: 'Lights of India', id: 16511911, distance: 6, coords: {latitude: 49.21138759999999, longitude: 16.60189790000004}},
-    {name: 'U Dřeváka', id: 16505458, distance: 4, coords: {latitude: 49.209095, longitude: 16.60089579999999}},
-    {name: 'Al Capone', id: 16515833, distance: 5, coords: {latitude: 49.2105087, longitude: 16.601534000000015}},
-    {name: 'Divá Bára', id: 16514047, distance: 6, coords: {latitude: 49.20995699999999, longitude: 16.6027464}},
-    {name: 'U Bílého beránka', id: 16506737, distance: 8, coords: {latitude: 49.2091793, longitude: 16.60371370000007}},
-    {name: 'Himalaya', id: 18020959, distance: 12, coords: {latitude: 49.208188, longitude: 16.60556930000007}},
+const restaurants = [
+    {
+        address: 'U Dřeváka Beer&Grill, Dřevařská, Brno-Královo Pole-Brno-střed',
+        id: 16505458,
+    },
+    {
+        address: 'Pizzeria Al Capone, Hrnčířská, Brno-Ponava',
+        id: 16515833,
+    },
+    {
+        address: 'Restaurace Divá Bára, Štefánikova, Brno-střed',
+        id: 16514047,
+    },
+    {
+        address: 'Light of India, Štefánikova, Brno-Královo Pole-Ponava',
+        id: 16511911,
+    },
+    {
+        address: 'U Bílého beránka, Štefánikova, Brno-Královo Pole-Ponava',
+        id: 16506737,
+    },
+    {
+        address: 'Himalaya, Pionýrská, Brno',
+        id: 18020959
+    },
 ];
 
-export const getRestaurantByDistance = (currentPosition: ILocationCoordinates) => {
-    const restaurantDistances = restaurants.map(restaurant => {
-        return ({
-            distance: geolib.getDistance(currentPosition, restaurant.coords),
-            name: restaurant.name,
-            id: restaurant.id
-        })
-    });
+export const getRestaurantByDistance = (restaurantsWithDistance: Restaurant[]): Restaurant[] =>
+    restaurantsWithDistance.sort(sortByDistance);
 
-    return restaurantDistances
-        .sort(sortByDistance)
-        .map(restaurant => ({
-            ...restaurant,
-            distance: Math.round(restaurant.distance / 83),
+export const loadRestaurants = async (currentPosition: LatLng): Promise<Restaurant[]> => {
+    const service = new google.maps.DistanceMatrixService();
+
+    const restaurantsWithDistances = restaurants.map(restaurant => new Promise<Restaurant>(
+        resolve => {
+            service.getDistanceMatrix(
+                {
+                    origins: [currentPosition],
+                    destinations: [restaurant.address],
+                    travelMode: TravelMode.WALKING,
+                },
+                (response, status) => resolve(parseDistances(response, status, restaurant))
+            );
         }));
+
+    return Promise.all(restaurantsWithDistances);
+};
+
+const parseDistances = (response: DistanceMatrixResponse, status: DistanceMatrixStatus, restaurant: Restaurant): Restaurant => {
+    if (status == DistanceMatrixStatus.OK) {
+        const googleDuration = response.rows[0].elements[0].duration;
+        const googleDistance = response.rows[0].elements[0].distance;
+
+        return {
+            address: restaurant.address,
+            id: restaurant.id,
+            distance: googleDistance.value,
+            duration: googleDuration.text,
+        };
+    }
 };

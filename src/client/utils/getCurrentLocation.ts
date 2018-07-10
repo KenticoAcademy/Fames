@@ -1,24 +1,16 @@
-const FI_MUNI_COORDS = {
-    latitude: 49.2099358,
-    longitude: 16.598976799999946
-};
+import LatLng = google.maps.LatLng;
 
-export interface ILocationCoordinates {
-    readonly latitude: number;
-    readonly longitude: number;
-}
+const FI_MUNI_COORDS = new google.maps.LatLng(49.209443, 16.598980);
 
-export const getCurrentLocation = (): ILocationCoordinates => {
+export const getCurrentLocation = (): LatLng => {
     let location = FI_MUNI_COORDS;
 
     if (navigator.geolocation) {
         navigator
             .geolocation
             .getCurrentPosition(
-                (position: Position) => location = {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                },
+                (position: Position) =>
+                    location = new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
                 (error) => console.log(error)
             );
     }
